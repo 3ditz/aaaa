@@ -1,0 +1,156 @@
+local library = loadstring(game:HttpGet(('https://raw.githubusercontent.com/AikaV3rm/UiLib/master/Lib.lua')))()
+local w = library:CreateWindow("Mortem Metallum")
+local b = w:CreateFolder("Misc")
+local c = w:CreateFolder("AutoParry")
+c:DestroyGui()
+b:Button("CrateEsp",function()
+    function addUi(part)
+        local partGui = Instance.new("BillboardGui", part)
+        partGui.Size = UDim2.new(1,0,1,0)
+        partGui.AlwaysOnTop = true
+        partGui.Name = "MuskESP"
+        local frame = Instance.new("Frame", partGui)
+        frame.BackgroundColor3 = Color3.fromRGB(255, 80, 60)
+        frame.BackgroundTransparency = 0.75
+        frame.Size = UDim2.new(1,0,1,0)
+        frame.BorderSizePixel = 0
+        local nameGui = Instance.new("BillboardGui", part)
+        nameGui.Size = UDim2.new(3,0,1.5,0)
+        nameGui.SizeOffset = Vector2.new(0,1)
+        nameGui.AlwaysOnTop = true
+        nameGui.Name = "Baseplate"
+        local text = Instance.new("TextLabel", nameGui)
+        text.Text = "Crate"
+        text.TextColor3 = Color3.fromRGB(255,80,60)
+        text.Transparency = 0.25
+        text.BackgroundTransparency = 1
+        text.TextScaled = true
+        text.Size = UDim2.new(5,5,5,5)
+        text.Font = Enum.Font.GothamSemibold
+        text.Name = "Text"
+    end
+    
+    for _,v in pairs(game:GetService("Workspace"):GetDescendants()) do
+        if v:FindFirstChild("Click") ~= nil then
+            addUi(v.Click)
+        end
+    end
+    
+    game:GetService("Workspace").ChildAdded:Connect(function(v)
+        addUi(v:WaitForChild("Click"))
+    end)
+end)
+
+game:GetService('RunService').RenderStepped:connect(function()
+	if _G.HitBoxExpand then
+		for i,v in next, game:GetService('Players'):GetPlayers() do
+			if v.Name ~= game:GetService('Players').LocalPlayer.Name then
+				pcall(function()
+					v.Character.HumanoidRootPart.Size = Vector3.new(_G.HeadSize,_G.HeadSize,_G.HeadSize)
+					v.Character.HumanoidRootPart.Transparency = 1 -- edit if you want it to be visible or transparent
+					v.Character.HumanoidRootPart.BrickColor = BrickColor.new("Really blue")
+					v.Character.HumanoidRootPart.Material = "Smooth Plastic"
+					v.Character.HumanoidRootPart.CanCollide = false
+				end)
+			end
+		end
+	end
+	wait()
+end)
+
+b:Toggle("HitboxExpander",function(bool)
+    shared.toggle = bool
+    _G.HitBoxExpand = bool;
+end)
+
+b:Slider("Hitbox Size",{
+    min = 1; -- min value of the slider
+    max = 30; -- max value of the slider
+    precise = true; -- max 2 decimals
+},function(value)
+    _G.HeadSize = value
+end)
+
+local animIds = {
+	"rbxassetid://5416575259";
+	"rbxassetid://5428578390";
+	"rbxassetid://5428613396";
+	"rbxassetid://5435382827";
+	"rbxassetid://5435969402";
+	"rbxassetid://5431979188";
+	"rbxassetid://5436083192";
+	"rbxassetid://5436059670";
+	"rbxassetid://4061495031";
+	"rbxassetid://3857610554";
+	"rbxassetid://3857630958";
+	"rbxassetid://5435928313";
+	"rbxassetid://5424166879";
+} --Probably a better way to go about it, but this game has relatively few animations.
+
+function getParryEvent()
+	for i, v in next, char:GetDescendants() do
+		if v:IsA("RemoteEvent") and v.Name == "ability" then
+			return v
+		end
+	end
+	return nil
+end
+
+function parry()
+	local myParryEvent = getParryEvent()
+	if myParryEvent then
+		myParryEvent:FireServer()
+	end
+end
+
+_G.FaceEnemy = false
+c:Toggle("FaceEnemy",function(bool)
+    shared.toggle = bool
+    _G.FaceEnemy = bool;
+end)
+
+_G.ParryDistance = 20
+c:Slider("Parry Distance",{
+    min = 1; -- min value of the slider
+    max = 20; -- max value of the slider
+    precise = true; -- max 2 decimals
+},function(value)
+    _G.ParryDistance = value
+end)
+
+plr = game.Players.LocalPlayer
+runService = game:GetService('RunService')
+_G.AutoParry = false
+c:Toggle("AutoParry",function(bool)
+    shared.toggle = bool
+    _G.AutoParry = bool
+    spawn(function()
+        while _G.AutoParry do
+            wait()
+    		pcall(function()
+    			char = plr.Character
+    			runService.RenderStepped:Wait()
+    			for i, plrChar in next, workspace.PlayersCharacters:GetChildren() do
+    				if plrChar ~= char then
+    					local anims = plrChar.Humanoid:GetPlayingAnimationTracks()
+    					for _, anim in next, anims do
+    						if table.find(animIds, anim.Animation.AnimationId) then
+    							if (plrChar.HumanoidRootPart.Position - char.HumanoidRootPart.Position).Magnitude <= _G.ParryDistance and plrChar.Humanoid.Health > 0 and not plrChar.Humanoid.PlatformStand then
+    								parry()
+    								if _G.FaceEnemy then
+    									local vector = char.HumanoidRootPart.Orientation
+    									for i = 1, 10 do --A loop to make your character face the aggressor, as parrying doesn't protect your rear
+    										char.HumanoidRootPart.CFrame = char:SetPrimaryPartCFrame(CFrame.new(char.HumanoidRootPart.Position, plrChar.HumanoidRootPart.Position))
+    										wait()
+    									end
+    								end
+    								wait(1) --Prevents mass event firing
+    							end
+    						end
+    					end
+    				end    
+    			end
+    		end)
+        end
+    end)
+end)
