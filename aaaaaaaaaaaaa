@@ -1,5 +1,5 @@
 local library = loadstring(game:HttpGet(('https://raw.githubusercontent.com/AikaV3rm/UiLib/master/Lib.lua')))()
-local w = library:CreateWindow("Mortem Metallum")
+local w = library:CreateWindow("Made By 3ditz#1111")
 local b = w:CreateFolder("Misc")
 local c = w:CreateFolder("AutoParry")
 c:DestroyGui()
